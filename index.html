@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIDEON IA - Real AI como Grok</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;color:#fff;font-family:Inter,system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+.header{width:100%;max-width:800px;display:flex;justify-content:space-between;align-items:center;padding:20px 0;border-bottom:1px solid #222;margin-bottom:40px}
+.logo{font-size:24px;font-weight:800;letter-spacing:-1px} .logo span{color:#8b5cf6}
+.badge{font-size:12px;padding:6px 12px;background:#111;border:1px solid #333;border-radius:20px;color:#888}
+.container{width:100%;max-width:700px}
+.h1{font-size:36px;font-weight:700;letter-spacing:-1px;margin-bottom:10px;text-align:center}
+.sub{color:#666;text-align:center;margin-bottom:30px}
+.card{background:#0a0a0a;border:1px solid #222;border-radius:20px;padding:30px;margin-bottom:20px}
+.textarea{width:100%;min-height:120px;background:#111;border:1px solid #333;border-radius:12px;padding:16px;color:#fff;font-size:16px;resize:none;outline:none}
+.textarea:focus{border-color:#8b5cf6}
+.upload{margin:20px 0;border:2px dashed #333;border-radius:16px;padding:30px;text-align:center;cursor:pointer;transition:.2s}
+.upload:hover{border-color:#8b5cf6;background:#111}
+.upload img{max-width:100%;max-height:300px;border-radius:12px;margin-top:15px}
+.row{display:flex;gap:12px;margin:20px 0;flex-wrap:wrap}
+.select{flex:1;min-width:140px;background:#111;border:1px solid #333;border-radius:10px;padding:12px;color:#fff}
+.btn{width:100%;background:#fff;color:#000;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:hover{background:#e5e5e5} .btn:disabled{background:#333;color:#666;cursor:not-allowed}
+.status{margin-top:20px;padding:16px;background:#111;border:1px solid #333;border-radius:12px;display:none}
+.status.show{display:block}
+.video-wrap{margin-top:20px;display:none} .video-wrap.show{display:block}
+video{width:100%;border-radius:16px;background:#000}
+.error{background:#1a0a0a;border-color:#441111;color:#ff6666}
+.success{border-color:#22c55e}
+.suggestions{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}
+.sug{font-size:13px;padding:8px 14px;background:#111;border:1px solid #333;border-radius:20px;cursor:pointer;color:#888}
+.sug:hover{border-color:#666;color:#fff}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">VIDEON<span>.</span></div>
+  <div class="badge">● IA REAL ACTIVA</div>
+</div>
+
+<div class="container">
+  <div class="h1">¿Qué video quieres crear?</div>
+  <div class="sub">IA real como Grok Video 3 + VEO 3.1 - No es demo, genera video de verdad</div>
+
+  <div class="card">
+    <textarea id="prompt" class="textarea" placeholder="Ej: Un astronauta caminando en Marte al atardecer, estilo cinematográfico IMAX, polvo flotando, luz dorada..."></textarea>
+    
+    <div class="suggestions">
+      <div class="sug" onclick="setPrompt('Foto a video: persona sonríe y mira a cámara')">📸 Foto a Video</div>
+      <div class="sug" onclick="setPrompt('Cinemático, movimiento de cámara lento, 4K')">🎬 Cinemático</div>
+      <div class="sug" onclick="setPrompt('Estilo anime, colores vibrantes, movimiento fluido')">🎨 Anime</div>
+      <div class="sug" onclick="setPrompt('Realista, hiperrealista, 8K, detalle extremo')">✨ Realista</div>
+    </div>
+
+    <div class="upload" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+      <div id="uploadText">📸 Arrastra tu foto aquí o haz clic<br><small style="color:#666">Opcional - para animar una foto como Grok</small></div>
+      <img id="preview" style="display:none">
+      <input type="file" id="fileInput" accept="image/*" style="display:none">
+    </div>
+
+    <div class="row">
+      <select id="model" class="select">
+        <option value="grok-video-3">Grok Video 3 (Como Grok - 10s)</option>
+        <option value="grok-video-3-5s">Grok Video 3 - 5s</option>
+        <option value="veo-3.1-fast-hd">VEO 3.1 Fast HD (720p) $0.07</option>
+        <option value="veo-3.1-fast-fullhd">VEO 3.1 Full HD (1080p)</option>
+        <option value="seedance-2-fast">Seedance 2 Fast (4-15s)</option>
+      </select>
+      <select id="duration" class="select">
+        <option value="5">5 segundos</option>
+        <option value="10" selected>10 segundos</option>
+        <option value="15">15 segundos</option>
+      </select>
+    </div>
+
+    <button id="genBtn" class="btn" onclick="generateRealVideo()">
+      <span>✦</span> Generar Video con IA Real
+    </button>
+
+    <div id="status" class="status"></div>
+
+    <div id="videoWrap" class="video-wrap">
+      <video id="resultVideo" controls autoplay loop muted playsinline></video>
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <button class="btn" style="flex:1;background:#111;color:#fff;border:1px solid #333" onclick="downloadVideo()">⬇ Descargar</button>
+        <button class="btn" style="flex:1;background:#111;color:#fff;border:1px solid #333" onclick="reset()">↺ Nuevo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let imageBase64 = null;
+let currentVideoUrl = null;
+
+function setPrompt(t){ document.getElementById('prompt').value = t; }
+
+document.getElementById('fileInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    imageBase64 = ev.target.result;
+    const img = document.getElementById('preview');
+    img.src = imageBase64;
+    img.style.display='block';
+    document.getElementById('uploadText').innerHTML = '✅ Foto cargada - Click para cambiar';
+  };
+  reader.readAsDataURL(file);
+});
+
+const uploadArea = document.getElementById('uploadArea');
+uploadArea.addEventListener('dragover', e=>{ e.preventDefault(); uploadArea.style.borderColor='#8b5cf6'; });
+uploadArea.addEventListener('dragleave', e=>{ uploadArea.style.borderColor='#333'; });
+uploadArea.addEventListener('drop', e=>{
+  e.preventDefault(); uploadArea.style.borderColor='#333';
+  const file = e.dataTransfer.files[0];
+  if(file && file.type.startsWith('image/')){
+    document.getElementById('fileInput').files = e.dataTransfer.files;
+    document.getElementById('fileInput').dispatchEvent(new Event('change'));
+  }
+});
+
+function showStatus(msg, type=''){
+  const s = document.getElementById('status');
+  s.className = 'status show ' + type;
+  s.innerHTML = msg;
+}
+
+async function generateRealVideo(){
+  const prompt = document.getElementById('prompt').value.trim();
+  const model = document.getElementById('model').value;
+  const duration = document.getElementById('duration').value;
+  const btn = document.getElementById('genBtn');
+  
+  if(!prompt){ showStatus('⚠️ Escribe qué video quieres generar', 'error'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Generando...';
+  document.getElementById('videoWrap').classList.remove('show');
+  showStatus('🧠 Conectando con IA real (Grok Video 3 / VEO 3.1)...<br><small>Esto puede tardar 30-90 segundos, es IA real, no demo</small>');
+
+  try{
+    // Llamada a NUESTRO backend, no directo a apimodels (así no hay CORS ni blanco)
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, image: imageBase64, model, duration })
+    });
+
+    const data = await res.json();
+
+    if(!res.ok){
+      throw new Error(data.error || JSON.stringify(data));
+    }
+
+    // Si ya viene con URL
+    if(data.data && data.data.url){
+      currentVideoUrl = data.data.url;
+      showVideo(currentVideoUrl);
+      showStatus('✅ Video generado con IA real - Grok Video 3', 'success');
+      return;
+    }
+
+    // Si es async con ID, hacer polling
+    if(data.id){
+      showStatus(`⏳ IA generando... ID: ${data.id}<br>Esperando resultado (puede tardar 1-2 min)...`);
+      await pollUntilReady(data.id);
+      return;
+    }
+
+    // Fallback si formato raro
+    if(data.url){
+      currentVideoUrl = data.url;
+      showVideo(currentVideoUrl);
+      showStatus('✅ Video listo', 'success');
+    } else {
+      throw new Error('Respuesta inesperada: ' + JSON.stringify(data).substring(0,500));
+    }
+
+  }catch(e){
+    console.error(e);
+    showStatus(`❌ Error: ${e.message}<br><br><small>Si es 401, tu API key expiró. Ve a apimodels.app y genera nueva, luego pégala en api/generate.js</small>`, 'error');
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = '<span>✦</span> Generar Video con IA Real';
+  }
+}
+
+async function pollUntilReady(id){
+  for(let i=0;i<40;i++){
+    await new Promise(r=>setTimeout(r,3000));
+    try{
+      const res = await fetch(`/api/status?id=${id}`);
+      const data = await res.json();
+      if(data.status === 'completed' && data.data && data.data.url){
+        currentVideoUrl = data.data.url;
+        showVideo(currentVideoUrl);
+        showStatus('✅ Video generado con IA real!', 'success');
+        return;
+      }
+      if(data.status === 'failed'){
+        throw new Error('Generación falló: ' + JSON.stringify(data));
+      }
+      showStatus(`⏳ IA trabajando... (${i*3}s) - Estado: ${data.status || 'procesando'}...`);
+    }catch(e){
+      console.error('Poll error', e);
+    }
+  }
+  throw new Error('Timeout - la IA tardó demasiado, intenta de nuevo');
+}
+
+function showVideo(url){
+  const wrap = document.getElementById('videoWrap');
+  const vid = document.getElementById('resultVideo');
+  vid.src = url;
+  wrap.classList.add('show');
+  vid.play().catch(()=>{});
+}
+
+function downloadVideo(){
+  if(!currentVideoUrl) return;
+  const a = document.createElement('a');
+  a.href = currentVideoUrl;
+  a.download = `videon-${Date.now()}.mp4`;
+  a.click();
+}
+
+function reset(){
+  document.getElementById('prompt').value='';
+  document.getElementById('preview').style.display='none';
+  document.getElementById('uploadText').innerHTML='📸 Arrastra tu foto aquí o haz clic<br><small style="color:#666">Opcional - para animar una foto como Grok</small>';
+  imageBase64=null;
+  document.getElementById('videoWrap').classList.remove('show');
+  document.getElementById('status').classList.remove('show');
+}
+</script>
+</body>
+</html>
